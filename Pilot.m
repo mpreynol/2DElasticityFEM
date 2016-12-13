@@ -1,4 +1,4 @@
-
+% These files are the modified Thermal Files for Elasticity
 %Set up Mesh Geometry:
 n=10;
 Domain=[0,1,0,1]; %xmin,xmax,ymin,ymax
