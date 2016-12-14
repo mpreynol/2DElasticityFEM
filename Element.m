@@ -20,6 +20,7 @@ classdef Element < handle
         u=[]; % Deformations at the nodes once solved
         L2=0; % Value of L2 norm for the element
         h; % input boundary data.
+        E=[]; % Strain information 
     end
     
     methods
@@ -108,11 +109,23 @@ classdef Element < handle
            
         end
         
-        function interU=getU(obj,X,Y)
+        function [U]=getU(obj,X,Y)
             % Method returns the interpolated u at spatial coordinates X,Y
             [natural]=obj.Shape.getXiEta(X,Y);
             obj.Shape.setAll(natural(1),natural(2));
-            interU=obj.Shape.N*obj.u;    
+            U=struct('displ',[0;0],'du',[0;0;0]);
+            U.displ=obj.Shape.NE*obj.u;    
+            U.du=obj.Shape.BE*obj.u; U.du(3)=U.du(3)*0.5;
+        end
+        
+        function setNodalResults(obj)
+           % Method Stores Nodal Values for the strain information
+           naturalCordinateList=[-1,-1;1,-1;1,1;-1,1];
+           obj.E=zeros(3,4);
+           for i=1:4
+               obj.Shape.setAll(naturalCordinateList(i,1),naturalCordinateList(i,2));
+               obj.E(:,i)=obj.Shape.BE*obj.u; obj.E(3,i)=obj.E(3,i)*0.5;
+           end
         end
     end
     

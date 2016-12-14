@@ -31,20 +31,7 @@ classdef Assemble < handle
                end
             end
         end
-        function [Z]=buildSurface(X,Y,NN)
-            % Method Builds a surface from X and Y meshgrids a a return
-            % nodal array
-            Z=zeros(size(X,1),size(X,2));
-            for i =1: length(X)
-                for j=1: length(Y)
-                    for k=1:length(NN)
-                        if (NN(k,2)==X(i,j) && NN(k,3)==Y(i,j))
-                            Z(i,j)=NN(k,4);
-                        end
-                    end
-                end
-            end
-        end
+
         
         function [G,b]=lagrange(BE)
             % Method Builds Lagrange Multiplier Matrices and vectors 

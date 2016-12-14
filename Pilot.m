@@ -1,5 +1,5 @@
 %Set up Mesh Geometry:
-[NN,NEL,X,Y] = GridRectangle(10,0.5,50,5);
+[NN,NEL,X,Y] = GridRectangle(10,0.5,20,5);
 
 %Set up Essential Boundary:
 b1=[-eps,eps,-eps,2+eps,[0,0]];
@@ -13,7 +13,7 @@ BN=Boundary(NN,b2); BN(BN==-Inf)=0;
 
 % Set up Inputs:
 Q=[0;-10];
-C=Constit(100000,0.2,'Plane Strain').C;
+C=Constit(100000,0.2,'Plane Stress').C;
 
 % Set up Plotting Domain:
 R=[0,12,-1,1];
@@ -51,16 +51,20 @@ ua=KA\fb;
 % Populate solution back into Mesh Collection:
 for i=1:size(Mesh,2)
     Mesh(i).u=ua(Mesh(i).dof);
+    Mesh(i).setNodalResults();
 end
 
 % Append Results for Node Array
-NN=[NN,u(NN(:,4)),u(NN(:,5))];
+NN=[NN,ua(NN(:,4)),ua(NN(:,5))];
 
 % Plot Deformed
 MeshPlot.plotDeformed(Mesh,1)
 axis(R)
 hold on
-    
+
+%% Plot Results
+Z=MeshPlot.buildSurface(X,Y,NN,4)
+
 
 
 
