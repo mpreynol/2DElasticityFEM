@@ -1,10 +1,7 @@
 classdef Element < handle
-    %ELEMENT assembles LHS and RHS vectors by gauss int
+    %ELEMENT2DElasticity assembles LHS and RHS vectors by gauss int
     % Element is currently quad linear elements
-    % Hard Coded with flux and body forces as supplied in the question
-    % in Real problems Element will accept force inputs and perform linear
-    % interpolation
-	% Written by Mathew Reynolds Nov 10, 2016
+	% Written by Mathew Reynolds Dec 12, 2016
     
     properties
         K=[]; % Stiffness Matrix
@@ -18,32 +15,31 @@ classdef Element < handle
         fQ=[]; % Body Forcing Term
         fh=[]; % Flux Forcing Term
         f=[]; % Total Forcing Term
-        k=[]; %  Diffusion Tensor
-        Q; % Body Force Term
+        C=[]; %  Constituitive Tensor
+        Q=[]; % Body Force Term
         u=[]; % Deformations at the nodes once solved
         L2=0; % Value of L2 norm for the element
-        h; % inputflux.
+        h; % input boundary data.
     end
     
     methods
         % Overloaded constructor with nodal inputs and integration order
-        % Matlab is silly and I can't create a default constructor???
-        function obj = Element(x,y,dof,k,Q,h,orderInt)
+        function obj = Element(x,y,dof,C,Q,h,orderInt)
             obj.x=x;
             obj.y=y;
             obj.dof=dof;
-            obj.k=k;
+            obj.C=C;
             obj.Q=Q;
             obj.h=h;
             obj.orderInt=orderInt;
             obj.G2=Quadrature.twoDim(orderInt);
             obj.G1=Quadrature.oneDim(orderInt);
             obj.Shape=quadLinear(x,y); % Initialize Shape Function
-            obj.K=zeros(4,4); % Initalize Stiffess
+            obj.K=zeros(8,8); % Initalize Stiffess
             obj.setStiffness();
-            obj.fQ=zeros(4,1); % Initalize Body Force
+            obj.fQ=zeros(8,1); % Initalize Body Force
             obj.setBodyForce();
-            obj.fh=zeros(4,1); % Initalize Flux Force
+            obj.fh=zeros(8,1); % Initalize Flux Force
             obj.setTraction();
             obj.f=obj.fQ+obj.fh;
         end
@@ -51,7 +47,7 @@ classdef Element < handle
         function setStiffness(obj)
             for i=1:size(obj.G2,1) % perform Guass Integration [-1,1] over domain
                 obj.Shape.setAll(obj.G2(i,1),obj.G2(i,2));
-                obj.K=obj.K+obj.Shape.B'*obj.k*obj.Shape.B*obj.G2(i,3)*obj.Shape.j;
+                obj.K=obj.K+obj.Shape.BE'*obj.C*obj.Shape.BE*obj.G2(i,3)*obj.Shape.j;
             end
         end
         
@@ -59,7 +55,7 @@ classdef Element < handle
             % Need to rewrite forcing functions to use mapping
             for i=1:size(obj.G2,1) % perform Guass Integration [-1,1] over domain
                 obj.Shape.setAll(obj.G2(i,1),obj.G2(i,2));
-                obj.fQ=obj.fQ+obj.Shape.N'*obj.Q*obj.Shape.j*obj.G2(i,3);             
+                obj.fQ=obj.fQ+obj.Shape.NE'*obj.Q*obj.Shape.j*obj.G2(i,3);             
             end            
         end
         

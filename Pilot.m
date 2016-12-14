@@ -5,29 +5,24 @@ Domain=[0,1,0,1]; %xmin,xmax,ymin,ymax
 [NN,NEL,X,Y] = GridSquare(n,Domain(1),Domain(4)); % Set up Global Elements
 
 %Set up Essential Boundary:
-b1=[Domain(1),Domain(2),-eps,eps,25];
-b2=[-eps,eps,Domain(3),Domain(4),25];
-BE=Boundary(NN,b1,b2);
-[G,b]=Assemble.lagrange(BE);
+b1=[-eps,eps,Domain(3),Domain(4),[0,0]];
+BE=Boundary(NN,b1);
+%[G,b]=Assemble.lagrange(BE);
 
 % Set up Natural Boundary:
-b3=[Domain(1),Domain(2),Domain(4)-eps,Domain(4)+eps,-5];
-b4=[Domain(2)-eps,Domain(2)+eps,Domain(3),Domain(4),0];
-BNx=Boundary(NN,b4); BNx(BNx==-Inf)=0;
-BNy=Boundary(NN,b3); BNy(BNy==-Inf)=0;
 
 % Set up Inputs:
-Q=7;
-k=[20,0;0,20];
+Q=[0;-1];
+C=Constit(100,0.2,'Plane Strain').C;
 
 %%
 %Set up Mesh Object as collection of element objects
 Mesh=Element.empty(size(NEL,1),0);
-for i=1:size(Mesh)
-    dof=NEL(i,:); x=NN(dof,2); y=NN(dof,3); h=[BNx(dof)';BNy(dof)']; 
-    Mesh(i)=Element(x,y,dof,k,Q,h,2);
+for i=1:1
+    dof=NEL(i,:); x=NN(dof,2); y=NN(dof,3); h=[zeros(1,4);zeros(1,4)]; 
+    Mesh(i)=Element(x,y,dof,C,Q,h,2);
 end
-
+%%
 % Assembly Element and Force Vectors
 [K,f]=Assemble.buildFromMesh(Mesh,size(NN,1));
 

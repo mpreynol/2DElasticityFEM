@@ -12,6 +12,7 @@ classdef quadLinear < handle
         X
         Y
         N=[]; % The Shape function array that is used for the forcing arrays
+        NE=[] % Shape Functions compiled for 2D Elasticity
         Nxi=[];
         Neta=[];
         Xxi;
@@ -22,6 +23,7 @@ classdef quadLinear < handle
         Nx=[];
         Ny=[];
         B=[]; % The gradient array that is used for the stiffness matrix
+        BE=[]; % Shape Function Gradient for 2D Elasticity
     end
     
     methods
@@ -30,11 +32,13 @@ classdef quadLinear < handle
             obj.x=x;
             obj.y=y;
             obj.N=zeros(1,4);
+            obj.NE=zeros(2,8);
             obj.Nxi=zeros(1,4);
             obj.Neta=zeros(1,4);
             obj.Nx=zeros(1,4);
             obj.Ny=zeros(1,4);
             obj.B=zeros(2,4);
+            obj.BE=zeros(3,8);
         end
         % Set Method to reset coordinates 
         function setCords(obj,x,y)
@@ -48,6 +52,7 @@ classdef quadLinear < handle
             obj.N(2)=0.25*(1+xi)*(1-eta);
             obj.N(3)=0.25*(1+xi)*(1+eta);
             obj.N(4)=0.25*(1-xi)*(1+eta);
+            obj.NE=[obj.N(1)*eye(2),obj.N(2)*eye(2),obj.N(3)*eye(2),obj.N(4)*eye(2)];
             obj.Nxi(1)=0.25*(eta-1);
             obj.Nxi(2)=0.25*(1-eta);
             obj.Nxi(3)=0.25*(1+eta);
@@ -66,6 +71,7 @@ classdef quadLinear < handle
             obj.setNx();
             obj.setNy();
             obj.setB();
+            obj.setBE();
         end
     
         % Set Method for x
@@ -133,6 +139,13 @@ classdef quadLinear < handle
         % Set Method for B
         function setB(obj)
             obj.B=[obj.Nx;obj.Ny];
+        end
+        
+        % Set Method for BE
+        function setBE(obj)
+            obj.BE(1,:)=[obj.Nx(1),0,obj.Nx(2),0,obj.Nx(3),0,obj.Nx(4),0];
+            obj.BE(2,:)=[0,obj.Ny(1),0,obj.Ny(2),0,obj.Ny(3),0,obj.Ny(4)];
+            obj.BE(3,:)=[obj.Ny(1),obj.Nx(1),obj.Ny(2),obj.Nx(2),obj.Ny(3),obj.Nx(3),obj.Ny(4),obj.Nx(4)];
         end
         
         %Get Method for xi,eta
