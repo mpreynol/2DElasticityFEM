@@ -61,40 +61,36 @@ classdef Element < handle
         
         function setTraction(obj)
             if sum((sum(obj.h~=0))) % Then we have tractions
-                if obj.h(2,1)~=0 && obj.h(2,2)~=0 % Then this edge has tractions
-                    n=[0;-1];
+                if (obj.h(1)~=0 && obj.h(3)~=0) || (obj.h(2)~=0 && obj.h(4)~=0)
                     % Surface 1: eta=-1
                     for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
                         obj.Shape.setAll(obj.G1(i,1),-1);
                         js=sqrt((obj.Shape.Xxi)^2+(obj.Shape.Yxi)^2);
-                        obj.fh=obj.fh+obj.Shape.N'*dot(obj.h*obj.Shape.N',n')*js*obj.G1(i,2);
+                        obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
                     end
                 end
-                if obj.h(1,2)~=0 && obj.h(1,3)~=0 % Then this edge has tractions
-                    n=[1;0];
+                if (obj.h(3)~=0 && obj.h(5)~=0) || (obj.h(4)~=0 && obj.h(6)~=0)
                     % Surface 2: xi=1
                     for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
                         obj.Shape.setAll(1,obj.G1(i,1));
                         js=sqrt((obj.Shape.Xeta)^2+(obj.Shape.Yeta)^2);
-                        obj.fh=obj.fh+obj.Shape.N'*dot(obj.h*obj.Shape.N',n')*js*obj.G1(i,2);
+                        obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
                     end
                 end
-                if obj.h(2,3)~=0 && obj.h(2,4)~=0 % Then this edge has tractions
-                    n=[0;1];
+                if (obj.h(5)~=0 && obj.h(7)~=0) || (obj.h(6)~=0 && obj.h(8)~=0)
                     % Surface 3: eta=1
                     for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
                         obj.Shape.setAll(obj.G1(i,1),1);
                         js=sqrt((obj.Shape.Xxi)^2+(obj.Shape.Yxi)^2);
-                        obj.fh=obj.fh+obj.Shape.N'*dot(obj.h*obj.Shape.N',n')*js*obj.G1(i,2);
+                        obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
                     end
                 end
-                if obj.h(1,4)~=0 && obj.h(1,1)~=0 % Then this edge has tractions
-                    n=[-1;0];
+                if (obj.h(1)~=0 && obj.h(7)~=0) || (obj.h(2)~=0 && obj.h(8)~=0)
                     % Surface 4: xi=-1
                     for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
                         obj.Shape.setAll(-1,obj.G1(i,1));
                         js=sqrt((obj.Shape.Xeta)^2+(obj.Shape.Yeta)^2);
-                        obj.fh=obj.fh+obj.Shape.N'*dot(obj.h*obj.Shape.N',n')*js*obj.G1(i,2);
+                        obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
                     end
                 end
             end

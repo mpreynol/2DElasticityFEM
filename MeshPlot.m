@@ -10,7 +10,8 @@ classdef MeshPlot<handle
             for i=1:size(Mesh,2)
                 x=Mesh(i).x; x=[x;x(1)];
                 y=Mesh(i).y; y=[y;y(1)];
-                plot(x,y,'-ok')
+                lh.Color=[0,0,0,0.5]
+                plot(x,y,'-',lh)
                 hold on
             end
         end
@@ -22,7 +23,7 @@ classdef MeshPlot<handle
                 ux=Mesh(i).u(1:2:8); ux=[ux;ux(1)];
                 y=Mesh(i).y; y=[y;y(1)];
                 uy=Mesh(i).u(2:2:8); uy=[uy;uy(1)];
-                plot((x+scale*ux),(y+scale*uy),'-ob')
+                plot((x+scale*ux),(y+scale*uy),'-b')
                 hold on
             end           
         end
