@@ -12,7 +12,7 @@ function [B] = Boundary(NN,varargin)
 
 % Syntax for Boundary Specification:
 % [xmin, xmax, ymin,ymax,[value]]
-B=ones(size(NN,1)*2,1)*-inf; % Length of Boundary Vector is the DOF
+B=ones(size(NN,1)*2,1)*-inf; % Length of Boundary Vector is the no DOF
 for i=1:nargin-1
     infoArray=varargin{i};
     for j=1:length(NN)
