@@ -6,6 +6,7 @@ classdef Element < handle
     properties
         K=[]; % Stiffness Matrix
         dof=[]; % List of DOF for record keeping
+        nodes=[];
         x=[]; % List of x cordinates for element
         y=[]; % List of y cordinates for element
         orderInt; % Order of integration to develop components
@@ -25,9 +26,10 @@ classdef Element < handle
     
     methods
         % Overloaded constructor with nodal inputs and integration order
-        function obj = Element(x,y,dof,C,Q,h,orderInt)
+        function obj = Element(x,y,nodes,dof,C,Q,h,orderInt)
             obj.x=x;
             obj.y=y;
+            obj.nodes=nodes;
             obj.dof=dof;
             obj.C=C;
             obj.Q=Q;

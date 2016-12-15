@@ -1,5 +1,5 @@
 %Set up Mesh Geometry:
-[NN,NEL,X,Y] = GridRectangle(10,0.5,20,5);
+[NN,NEL,X,Y] = GridRectangle(10,0.5,40,10);
 
 %Set up Essential Boundary:
 b1=[-eps,eps,-eps,2+eps,[0,0]];
@@ -12,11 +12,11 @@ b2=[10-eps,10+eps,-eps,0.5+eps,[0,0]];
 BN=Boundary(NN,b2); BN(BN==-Inf)=0;
 
 % Set up Inputs:
-Q=[0;-10];
-C=Constit(100000,0.2,'Plane Stress').C;
+Q=[0;-15];
+C=Constit(100000,0.2,'Plane Strain').C;
 
 % Set up Plotting Domain:
-R=[0,12,-1,1];
+R=[0,15,-0.4,1];
 
 %
 %Set up Mesh Object as collection of element objects
@@ -25,7 +25,7 @@ for i=1:size(NEL,1)
     gNodes=NEL(i,:); x=NN(gNodes,2); y=NN(gNodes,3); 
     dof=reshape([NN(NEL(i,:),4),NN(NEL(i,:),5)]',[8,1]);
     h=BN(dof);
-    Mesh(i)=Element(x,y,dof,C,Q,h,2);
+    Mesh(i)=Element(x,y,gNodes,dof,C,Q,h,2);
 end
 %
 MeshPlot.plotOriginal(Mesh)
@@ -53,17 +53,36 @@ for i=1:size(Mesh,2)
     Mesh(i).u=ua(Mesh(i).dof);
     Mesh(i).setNodalResults();
 end
-
+%%
 % Append Results for Node Array
 NN=[NN,ua(NN(:,4)),ua(NN(:,5))];
+for i=1:size(Mesh,2)
+    NN(Mesh(i).nodes,8)=Mesh(i).E(1,:);
+    NN(Mesh(i).nodes,9)=Mesh(i).E(2,:);
+    NN(Mesh(i).nodes,10)=Mesh(i).E(3,:);
+end
 
 % Plot Deformed
 MeshPlot.plotDeformed(Mesh,1)
 axis(R)
 hold on
 
-%% Plot Results
-Z=MeshPlot.buildSurface(X,Y,NN,4)
+%% Plot Results exx
+Z=MeshPlot.buildSurface(X,Y,NN,8);
+surface(X,Y,Z)
+alpha(0.5)
+
+
+%% Plot Results eyy
+Z=MeshPlot.buildSurface(X,Y,NN,9);
+surface(X,Y,Z)
+alpha(0.5)
+
+
+%% Plot Results exy
+Z=MeshPlot.buildSurface(X,Y,NN,10);
+surface(X,Y,Z)
+alpha(0.5)
 
 
 
