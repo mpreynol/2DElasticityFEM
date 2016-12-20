@@ -136,7 +136,7 @@ classdef MeshPlot<handle
             Z=zeros(size(X,1),size(X,2));
             for i =1: size(X,1)
                 for j=1:size(X,2)
-                    for k=1:length(NN)
+                    for k=1:size(NN,1)
                         if (NN(k,2)==X(i,j) && NN(k,3)==Y(i,j))
                             Z(i,j)=NN(k,resultColumn);
                         end

@@ -22,6 +22,7 @@ classdef Element < handle
         L2=0; % Value of L2 norm for the element
         h; % input boundary data.
         E=[]; % Strain information 
+        sigma=[]; % Stress information
     end
     
     methods
@@ -117,8 +118,21 @@ classdef Element < handle
             obj.Shape.setAll(natural(1),natural(2));
             U=struct('displ',[0;0],'du',[0;0;0]);
             U.displ=obj.Shape.NE*obj.u;    
-            U.du=obj.Shape.BE*obj.u; U.du(3)=U.du(3)*0.5;
+            U.du=obj.Shape.BE*obj.u;
         end
+        
+        function [U]=getUdeformed(obj,X,Y)
+            % Method returns the interpolated u in deformed config at spatial coordinates X,Y
+            xd=obj.x+[obj.u(1);obj.u(3);obj.u(5);obj.u(7)];
+            yd=obj.y+[obj.u(2);obj.u(4);obj.u(6);obj.u(8)];
+            deformedShape=quadLinear(xd,yd);
+            [natural]=deformedShape.getXiEta(X,Y);
+            deformedShape.setAll(natural(1),natural(2));
+            U=struct('displ',[0;0],'du',[0;0;0],'dsigma',[0;0;0]);
+            U.displ=deformedShape.NE*obj.u;    
+            U.du=deformedShape.BE*obj.u;
+            U.dsigma=obj.C*deformedShape.BE*obj.u;
+        end        
         
         function setNodalResults(obj)
            % Method Stores Nodal Values for the strain information
@@ -126,7 +140,8 @@ classdef Element < handle
            obj.E=zeros(3,4);
            for i=1:4
                obj.Shape.setAll(naturalCordinateList(i,1),naturalCordinateList(i,2));
-               obj.E(:,i)=obj.Shape.BE*obj.u; obj.E(3,i)=obj.E(3,i)*0.5;
+               obj.E(:,i)=obj.Shape.BE*obj.u;
+               obj.sigma(:,i)=obj.C*obj.E(:,i);
            end
         end
     end
