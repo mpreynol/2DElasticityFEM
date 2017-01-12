@@ -21,13 +21,14 @@ classdef Element < handle
         u=[]; % Deformations at the nodes once solved
         L2=0; % Value of L2 norm for the element
         h; % input boundary data.
+        exactTraction; % Exact function Handle for boundary forces
         E=[]; % Strain information 
         sigma=[]; % Stress information
     end
     
     methods
         % Overloaded constructor with nodal inputs and integration order
-        function obj = Element(x,y,nodes,dof,C,Q,h,orderInt)
+        function obj = Element(x,y,nodes,dof,C,Q,h,orderInt,exactTraction)
             obj.x=x;
             obj.y=y;
             obj.nodes=nodes;
@@ -35,6 +36,13 @@ classdef Element < handle
             obj.C=C;
             obj.Q=Q;
             obj.h=h;
+            % For now if I input h==1 on a face and provide a function
+            % handle for exactTraction we will do a different integration.
+            % Note that the function handle has to correlate to the
+            % boundary data
+            if nargin>8 && isa(exactTraction,'function_handle')
+                obj.exactTraction=exactTraction;
+            end
             obj.orderInt=orderInt;
             obj.G2=Quadrature.twoDim(orderInt);
             obj.G1=Quadrature.oneDim(orderInt);
@@ -64,37 +72,74 @@ classdef Element < handle
         end
         
         function setTraction(obj)
-            if sum((sum(obj.h~=0))) % Then we have tractions
-                if (obj.h(1)~=0 && obj.h(3)~=0) || (obj.h(2)~=0 && obj.h(4)~=0)
-                    % Surface 1: eta=-1
-                    for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
-                        obj.Shape.setAll(obj.G1(i,1),-1);
-                        js=sqrt((obj.Shape.Xxi)^2+(obj.Shape.Yxi)^2);
-                        obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
+            if ~isa(obj.exactTraction,'function_handle') % Perform normal integration on a nodal array 'h'
+                if sum((sum(obj.h~=0))) % Then we have tractions
+                    if (obj.h(1)~=0 && obj.h(3)~=0) || (obj.h(2)~=0 && obj.h(4)~=0)
+                        % Surface 1: eta=-1
+                        for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
+                            obj.Shape.setAll(obj.G1(i,1),-1);
+                            js=sqrt((obj.Shape.Xxi)^2+(obj.Shape.Yxi)^2);
+                            obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
+                        end
+                    end
+                    if (obj.h(3)~=0 && obj.h(5)~=0) || (obj.h(4)~=0 && obj.h(6)~=0)
+                        % Surface 2: xi=1
+                        for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
+                            obj.Shape.setAll(1,obj.G1(i,1));
+                            js=sqrt((obj.Shape.Xeta)^2+(obj.Shape.Yeta)^2);
+                            obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
+                        end
+                    end
+                    if (obj.h(5)~=0 && obj.h(7)~=0) || (obj.h(6)~=0 && obj.h(8)~=0)
+                        % Surface 3: eta=1
+                        for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
+                            obj.Shape.setAll(obj.G1(i,1),1);
+                            js=sqrt((obj.Shape.Xxi)^2+(obj.Shape.Yxi)^2);
+                            obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
+                        end
+                    end
+                    if (obj.h(1)~=0 && obj.h(7)~=0) || (obj.h(2)~=0 && obj.h(8)~=0)
+                        % Surface 4: xi=-1
+                        for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
+                            obj.Shape.setAll(-1,obj.G1(i,1));
+                            js=sqrt((obj.Shape.Xeta)^2+(obj.Shape.Yeta)^2);
+                            obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
+                        end
                     end
                 end
-                if (obj.h(3)~=0 && obj.h(5)~=0) || (obj.h(4)~=0 && obj.h(6)~=0)
-                    % Surface 2: xi=1
-                    for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
-                        obj.Shape.setAll(1,obj.G1(i,1));
-                        js=sqrt((obj.Shape.Xeta)^2+(obj.Shape.Yeta)^2);
-                        obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
+            else % Else perform gaussian integration on a function handle
+                if sum((sum(obj.h~=0))) % Then we have tractions
+                    if (obj.h(1)~=0 && obj.h(3)~=0) || (obj.h(2)~=0 && obj.h(4)~=0)
+                        % Surface 1: eta=-1
+                        for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
+                            obj.Shape.setAll(obj.G1(i,1),-1);
+                            js=sqrt((obj.Shape.Xxi)^2+(obj.Shape.Yxi)^2);
+                            obj.fh=obj.fh+obj.Shape.NE'*obj.exactTraction(obj.Shape.X)*js*obj.G1(i,2);
+                        end
                     end
-                end
-                if (obj.h(5)~=0 && obj.h(7)~=0) || (obj.h(6)~=0 && obj.h(8)~=0)
-                    % Surface 3: eta=1
-                    for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
-                        obj.Shape.setAll(obj.G1(i,1),1);
-                        js=sqrt((obj.Shape.Xxi)^2+(obj.Shape.Yxi)^2);
-                        obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
+                    if (obj.h(3)~=0 && obj.h(5)~=0) || (obj.h(4)~=0 && obj.h(6)~=0)
+                        % Surface 2: xi=1
+                        for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
+                            obj.Shape.setAll(1,obj.G1(i,1));
+                            js=sqrt((obj.Shape.Xeta)^2+(obj.Shape.Yeta)^2);
+                            obj.fh=obj.fh+obj.Shape.NE'*obj.exactTraction(obj.Shape.Y)*js*obj.G1(i,2);
+                        end
                     end
-                end
-                if (obj.h(1)~=0 && obj.h(7)~=0) || (obj.h(2)~=0 && obj.h(8)~=0)
-                    % Surface 4: xi=-1
-                    for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
-                        obj.Shape.setAll(-1,obj.G1(i,1));
-                        js=sqrt((obj.Shape.Xeta)^2+(obj.Shape.Yeta)^2);
-                        obj.fh=obj.fh+obj.Shape.NE'*obj.Shape.NE*obj.h*js*obj.G1(i,2);
+                    if (obj.h(5)~=0 && obj.h(7)~=0) || (obj.h(6)~=0 && obj.h(8)~=0)
+                        % Surface 3: eta=1
+                        for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
+                            obj.Shape.setAll(obj.G1(i,1),1);
+                            js=sqrt((obj.Shape.Xxi)^2+(obj.Shape.Yxi)^2);
+                            obj.fh=obj.fh+obj.Shape.NE'*obj.exactTraction(obj.Shape.X)*js*obj.G1(i,2);
+                        end
+                    end
+                    if (obj.h(1)~=0 && obj.h(7)~=0) || (obj.h(2)~=0 && obj.h(8)~=0)
+                        % Surface 4: xi=-1
+                        for i=1:size(obj.G1,1) % perform Guass Integration [-1,1] over domain
+                            obj.Shape.setAll(-1,obj.G1(i,1));
+                            js=sqrt((obj.Shape.Xeta)^2+(obj.Shape.Yeta)^2);
+                            obj.fh=obj.fh+obj.Shape.NE'*obj.exactTraction(obj.Shape.Y)*js*obj.G1(i,2);
+                        end
                     end
                 end
             end
@@ -119,20 +164,22 @@ classdef Element < handle
             U=struct('displ',[0;0],'du',[0;0;0]);
             U.displ=obj.Shape.NE*obj.u;    
             U.du=obj.Shape.BE*obj.u;
+            U.dsigma=obj.C*obj.Shape.BE*obj.u;
         end
         
-        function [U]=getUdeformed(obj,X,Y)
-            % Method returns the interpolated u in deformed config at spatial coordinates X,Y
-            xd=obj.x+[obj.u(1);obj.u(3);obj.u(5);obj.u(7)];
-            yd=obj.y+[obj.u(2);obj.u(4);obj.u(6);obj.u(8)];
-            deformedShape=quadLinear(xd,yd);
-            [natural]=deformedShape.getXiEta(X,Y);
-            deformedShape.setAll(natural(1),natural(2));
-            U=struct('displ',[0;0],'du',[0;0;0],'dsigma',[0;0;0]);
-            U.displ=deformedShape.NE*obj.u;    
-            U.du=deformedShape.BE*obj.u;
-            U.dsigma=obj.C*deformedShape.BE*obj.u;
-        end        
+        % This method was doing funny things before, should verify
+%         function [U]=getUdeformed(obj,X,Y)
+%             % Method returns the interpolated u in deformed config at spatial coordinates X,Y
+%             xd=obj.x+[obj.u(1);obj.u(3);obj.u(5);obj.u(7)];
+%             yd=obj.y+[obj.u(2);obj.u(4);obj.u(6);obj.u(8)];
+%             deformedShape=quadLinear(xd,yd);
+%             [natural]=deformedShape.getXiEta(X,Y);
+%             deformedShape.setAll(natural(1),natural(2));
+%             U=struct('displ',[0;0],'du',[0;0;0],'dsigma',[0;0;0]);
+%             U.displ=deformedShape.NE*obj.u;    
+%             U.du=deformedShape.BE*obj.u;
+%             U.dsigma=obj.C*deformedShape.BE*obj.u;
+%         end        
         
         function setNodalResults(obj)
            % Method Stores Nodal Values for the strain information
