@@ -1,10 +1,11 @@
 %Set up Mesh Geometry:
-[NN,NEL,X,Y] = GridRectangle(20,1,200,100);
+[NN,NEL,X,Y] = GridRectangle(20,1,20,2);
 
 %Set up Essential Boundary:
-b1=[-eps,eps,-eps,2+eps,[0,0]];
-b11=[-eps,20+eps,-eps,1+eps,[-Inf,-Inf]];
-BE=Boundary(NN,b11,b1);
+b1=[-eps,eps,-eps,+eps,[0,-Inf]];
+b2=[-eps,eps,0.5-eps,0.5+eps,[0,0]];
+b3=[-eps,eps,1-eps,1+eps,[0,-Inf]];
+BE=Boundary(NN,b1,b2,b3);
 %[G,b]=Assemble.lagrange(BE);
 
 % Set up Natural Boundary:
@@ -25,7 +26,7 @@ for i=1:size(NEL,1)
     gNodes=NEL(i,:); x=NN(gNodes,2); y=NN(gNodes,3); 
     dof=reshape([NN(NEL(i,:),4),NN(NEL(i,:),5)]',[8,1]);
     h=BN(dof);
-    Mesh(i)=Element(x,y,gNodes,dof,C,Q,h,2);
+    Mesh(i)=Element(x,y,gNodes,dof,C,Q,h,2,@parabolicStress);
 end
 %
 MeshPlot.plotOriginal(Mesh)
@@ -87,12 +88,13 @@ alpha(0.5)
 
 %% Section Cut
 ySample=0:0.01:1;
+xSpot=10;
 % Assemble Data Arrays
 for w=1:length(ySample)
     for o=1:size(Mesh,2)
         if (sum(Mesh(o).y>=(ySample(w)-eps))>0 && sum(Mesh(o).y<=(ySample(w))+eps)>0 &&...
-                Mesh(o).x(1)==9)
-            uSample(w)=Mesh(o).getUdeformed(9,ySample(w));
+                Mesh(o).x(1)==xSpot)
+            uSample(w)=Mesh(o).getU(xSpot,ySample(w));
         end
     end
 end
