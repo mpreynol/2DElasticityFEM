@@ -1,5 +1,5 @@
 %Set up Mesh Geometry:
-[NN,NEL,X,Y] = GridRectangle(20,1,20,2);
+[NN,NEL,X,Y] = GridRectangle(20,1,Dx,Dy);
 
 %Set up Essential Boundary:
 b1=[-eps,eps,-eps,+eps,[0,-Inf]];
@@ -9,12 +9,12 @@ BE=Boundary(NN,b1,b2,b3);
 %[G,b]=Assemble.lagrange(BE);
 
 % Set up Natural Boundary:
-b2=[20-eps,20+eps,-eps,1+eps,[0,1]];
+b2=[20-eps,20+eps,-eps,1+eps,[0,-1]];
 BN=Boundary(NN,b2); BN(BN==-Inf)=0;
 
 % Set up Inputs:
 Q=[0;0];
-C=Constit(1E6,0.2,'Plane Stress').C;
+C=Constit(1E6,0.3,'Plane Stress').C;
 
 % Set up Plotting Domain:
 R=[0,22,-2,2];
@@ -29,10 +29,10 @@ for i=1:size(NEL,1)
     Mesh(i)=Element(x,y,gNodes,dof,C,Q,h,2,@parabolicStress);
 end
 %
-MeshPlot.plotOriginal(Mesh)
-axis(R)
+%MeshPlot.plotOriginal(Mesh)
+%axis(R)
 
-hold on
+%hold on
 %
 % Assembly Element and Force Vectors
 [K,f]=Assemble.buildFromMesh(Mesh,size(NN,1)*2);
@@ -62,49 +62,49 @@ for i=1:size(Mesh,2)
     NN(Mesh(i).nodes,9)=Mesh(i).sigma(2,:);
     NN(Mesh(i).nodes,10)=Mesh(i).sigma(3,:);
 end
-
+uMin=min(u);
 % Plot Deformed
-MeshPlot.plotDeformed(Mesh,1)
-axis(R)
-hold on
+%MeshPlot.plotDeformed(Mesh,1)
+%axis(R)
+%hold on
 
-%% Plot Results sxx
-Z=MeshPlot.buildSurface(X,Y,NN,8);
-surface(X,Y,Z)
-alpha(0.5)
-
-
-
-%% Plot Results syy
-Z=MeshPlot.buildSurface(X,Y,NN,9);
-surface(X,Y,Z)
-alpha(0.5)
-
-
-%% Plot Results sxy
-Z=MeshPlot.buildSurface(X,Y,NN,10);
-surface(X,Y,Z)
-alpha(0.5)
-
-%% Section Cut
-ySample=0:0.01:1;
-xSpot=10;
-% Assemble Data Arrays
-for w=1:length(ySample)
-    for o=1:size(Mesh,2)
-        if (sum(Mesh(o).y>=(ySample(w)-eps))>0 && sum(Mesh(o).y<=(ySample(w))+eps)>0 &&...
-                Mesh(o).x(1)==xSpot)
-            uSample(w)=Mesh(o).getU(xSpot,ySample(w));
-        end
-    end
-end
-
-%% Plot
-for c=1:length(ySample)
-   value=uSample(c).dsigma(3);
-   plot(ySample(c),value,'.');
-   hold on
-end
+% %% Plot Results sxx
+% Z=MeshPlot.buildSurface(X,Y,NN,8);
+% surface(X,Y,Z)
+% alpha(0.5)
+% 
+% 
+% 
+% %% Plot Results syy
+% Z=MeshPlot.buildSurface(X,Y,NN,9);
+% surface(X,Y,Z)
+% alpha(0.5)
+% 
+% 
+% %% Plot Results sxy
+% Z=MeshPlot.buildSurface(X,Y,NN,10);
+% surface(X,Y,Z)
+% alpha(0.5)
+% 
+% %% Section Cut
+% ySample=0:0.1:1;
+% xSpot=10;
+% % Assemble Data Arrays
+% for w=1:length(ySample)
+%     for o=1:size(Mesh,2)
+%         if (sum(Mesh(o).y>=(ySample(w)-eps))>0 && sum(Mesh(o).y<=(ySample(w))+eps)>0 &&...
+%                 Mesh(o).x(1)==xSpot)
+%             uSample(w)=Mesh(o).getU(xSpot,ySample(w));
+%         end
+%     end
+% end
+% 
+% %% Plot
+% for c=1:length(ySample)
+%    value=uSample(c).dsigma(3);
+%    plot(ySample(c),value,'.');
+%    hold on
+% end
 
 
 
