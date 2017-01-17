@@ -1,4 +1,5 @@
 # 2DElasticityFEM is a 2D elasticity FEM program written in MATLAB. 
+Original Written Dec 2016 by Mathew Reynolds.
 
 The supplied nodal (NN) and element arrays (NEL) 
 follows a standard format. Included is a Grid Square that creates a 2D square mesh or Gred Rectangle that creates a 2D 
