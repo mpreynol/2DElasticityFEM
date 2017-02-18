@@ -1,5 +1,5 @@
-trials=12;
-StartSize=10;
+trials=1;
+StartSize=1;
 Step=4;
 utrack=zeros(trials,1);
 htrack=zeros(trials,1);
